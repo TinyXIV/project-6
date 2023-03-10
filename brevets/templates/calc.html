@@ -158,7 +158,7 @@
                    
                    //Upon clicking the Submit button, the control times should be inserted into a 
                    //MongoDB database, and the form should be cleared (reset) without refreshing the page.
-                  var distance = $("select[name='distance']").val();
+                  var brevet_dist = $("select[name='distance']").val();
                   var start = $("input[name='begin_date']").val();
 
                   // Empty array of list items that we will fill with a for loop
@@ -180,10 +180,10 @@
                               }
                               // Construct a dictionary
                               var data = {
-                                 "km": control_point,
+                                 "distance": control_point,
                                  "open_time": open_time, 
                                  "close_time": close_time
-                                 }
+                                 };
                               // Push to list
                               items.push(data);
                               
@@ -210,14 +210,16 @@
                         item.find("input[name='open']").val('');
                         item.find("input[name='close']").val('');
 
-                            
+
                         });
                   var data = {
-                            "distance": distance, 
-                            "start": start,
-                            "items": items
+                            "brevet_dist": brevet_dist, 
+                            "start_time": start,
+                            "checkpoints": items
                      };
-
+                     
+                  console.log("brevet_dist: ", brevet_dist);
+                  console.log("data: ",  data);
                             
                   $.ajax({
                   dataType: 'json',
@@ -261,27 +263,37 @@
                         var result = data.result;
                         if (result.status == 1) {
                            console.log("Successfully fetched: ", data);
-                           var items = result.info.items;
+                           var items = result.brevet.items;
                            var num_items = items.length; 
-                           var data = result.info;
+                           var data = result.brevet;
                            
-                           $("select[name='distance']")[0].value = data.distance;
-                           $("input[name='begin_date']")[0].value = data.start;
+                           console.log("brevet_dist:", data.brevet_dist);
+                           console.log("start_time:" , data.start_time);
+                           console.log("Checkpoints:" , items);
+                           
+                 
+                           $("select[name='distance']")[0].value = data.brevet_dist;
+                        
+                           $("input[name='begin_date']")[0].value = new Date(data.start_time.$date).toISOString().substring(0,16);
 
-                           
+ 
                                   // For each row in the HTML table
                                   $('.control').each(function(index) {
                                       var litem = $(this); // This is our row
-                                       console.log("this working?");
-                                       console.log("num of items:", num_items);
-                                       console.log("index:" , index);
-                                       console.log("Items: Km: Open: Close: ", items[index].km, items[index].open_time, items[index].close_time);
+
+                                       
                                       // Check if we're already done?
                                       if (index < num_items) {
-                                          litem.find("input[name='km']").val(items[index].km);
-                                          litem.find("input[name='open']").val(items[index].open_time);
-                                          litem.find("input[name='close']").val(items[index].close_time);
+                                          console.log("num of items:", num_items);
+                                          console.log("index:" , index);
+                                          
 
+                                          litem.find("input[name='km']").val(items[index].distance);
+                                          litem.find("input[name='open']").val(new Date(items[index].open_time.$date).toISOString().substring(0,16));
+                                          litem.find("input[name='close']").val(new Date(items[index].close_time.$date).toISOString().substring(0,16));
+                                          //litem.find("input[name='open']").val(moment(items[index].open_time).format("YYYY-MM-DDTHH:mm"));
+                                          //litem.find("input[name='close']").val(moment(items[index].close_time).format("YYYY-MM-DDTHH:mm"));
+                                          console.log("Items[index]:", items[index]);
                                       }
                                       
                                   });

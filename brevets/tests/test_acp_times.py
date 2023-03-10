@@ -8,9 +8,9 @@ from acp_times import open_time, close_time
 import arrow
 import nose    # Testing framework
 import logging
-logging.basicConfig(format='%(levelname)s:%(message)s',
+#logging.basicConfig(format='%(levelname)s:%(message)s',
                     level=logging.WARNING)
-log = logging.getLogger(__name__)
+#log = logging.getLogger(__name__)
 
 
 def test_brevet1():

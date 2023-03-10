@@ -1,3 +1,6 @@
+from mongoengine.queryset.manager import QuerySetManager
+
+
 """
 Resource: Brevet
 """
@@ -5,7 +8,44 @@ from flask import Response, request
 from flask_restful import Resource
 
 # You need to implement this in database/models.py
-from database.models import Brevet
+from database.models import MyBrevet
+from mongoengine.errors import DoesNotExist
+
+
+
+class Brevet(Resource):
+
+    def get(self, _id):
+        try:
+            brevet = MyBrevet.objects.get(id=_id).to_json()
+            return Response(brevet, mimetype="application/json", status=200)
+            
+        except DoesNotExist:
+            return f"Brevet id {_id} cannot be found.", 404
+
+
+    def put(self, _id):
+        try:
+            data = request.json
+            brevet = MyBrevet.objects.get(id=_id)
+            brevet.update(**data)
+            brevet.reload()
+            return '', 200
+            
+        except DoesNotExist:
+            return f"Brevet id {_id} cannot not be found.", 404  
+
+
+    def delete(self, _id):
+        try:
+            MyBrevet.objects.get(id=_id).delete()
+            return '', 200
+            
+        except DoesNotExist:
+            return f"Brevet id {_id} cannot be found.", 404
+        
+
+
 
 # MongoEngine queries:
 # Brevet.objects() : similar to find_all. Returns a MongoEngine query

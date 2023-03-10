@@ -1,11 +1,33 @@
 """
 Resource: Brevets
 """
+
 from flask import Response, request
 from flask_restful import Resource
 
 # You need to implement this in database/models.py
-from database.models import Brevet
+from database.models import MyBrevet
+from mongoengine.errors import DoesNotExist
+
+
+class Brevets(Resource):
+    def get(self):
+        brevets = MyBrevet.objects().to_json()
+        return Response(brevets, mimetype="application/json", status=200)
+
+    def post(self):
+        data = request.json
+
+
+        result = MyBrevet(**data).save()
+
+        return {'_id': str(result.id)}, 200
+        
+
+
+
+
+
 
 # MongoEngine queries:
 # Brevet.objects() : similar to find_all. Returns a MongoEngine query

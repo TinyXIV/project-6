@@ -5,7 +5,7 @@ services:
         build: brevets/.
         command: python flask_brevets.py
         ports:
-            - "5002:$BREVETS_PORT"
+            - "5003:$BREVETS_PORT"
         depends_on:
             - api
         environment:
@@ -17,7 +17,7 @@ services:
         build: api/.
         command: python flask_api.py
         ports:
-            - "5001:$API_PORT"
+            - "5002:$API_PORT"
         depends_on:
             - db
         environment:

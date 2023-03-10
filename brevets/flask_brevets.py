@@ -3,14 +3,16 @@ Replacement for RUSA ACP brevet time calculator
 (see https://rusa.org/octime_acp.html)
 
 """
-
+import os
 import flask
-from flask import request
+import myapi
 import arrow  # Replacement for datetime, based on moment.js
 import acp_times  # Brevet time calculations
-import config
-from pymongo import MongoClient
-import mymongo
+
+
+
+
+
 
 #Use these functions^^
 
@@ -20,7 +22,7 @@ import logging
 # Globals
 ###
 app = flask.Flask(__name__)
-CONFIG = config.configuration()
+
 
 ###
 # Pages
@@ -54,12 +56,12 @@ def _calc_times():
     Expects one URL-encoded argument, the number of miles.
     """
     app.logger.debug("Got a JSON request")
-    km = request.args.get('km', 999, type=float)
-    distance = request.args.get('distance', type=int)
-    start_time = arrow.get(request.args.get('start_time', '', type=str))
+    km = flask.request.args.get('km', 999, type=float)
+    distance = flask.request.args.get('distance', type=int)
+    start_time = arrow.get(flask.request.args.get('start_time', '', type=str))
 
     app.logger.debug("km={}, distance={}, start_time={}".format(km, distance, start_time))
-    app.logger.debug("request.args: {}".format(request.args))
+    app.logger.debug("flask.request.args: {}".format(flask.request.args))
 
     open_time = acp_times.open_time(km, distance, start_time).format('YYYY-MM-DDTHH:mm')
     close_time = acp_times.close_time(km, distance, start_time).format('YYYY-MM-DDTHH:mm')
@@ -79,40 +81,35 @@ def insert_brevet():
     Accepts POST requests ONLY!
     JSON interface: gets JSON, responds with JSON
     """
-    status = None
     try:
         # Read the entire request body as a JSON
         # This will fail if the request body is NOT a JSON.
-        input_json = request.json
+        input_json = flask.request.json
         # if successful, input_json is automatically parsed into a python dictionary!
         
         # Because input_json is a dictionary, we can do this:
-        distance = input_json["distance"] # Should be a string
-        start = input_json["start"]
-        items = input_json["items"] # Should be a list of dictionaries
-  
-        status = mymongo.brevets_insert(distance, start, items)
-        result={
-            "message": "Inserted!", 
-            "status":1, # This is defined by you. You just read this value in your javascript.
-            "mongo_id": str(status)
-            }
+        brevet_dist = float(input_json["brevet_dist"])
+        start_time = arrow.get(input_json["start_time"])
+        checkpoints = input_json["checkpoints"] # Should be a list of dictionaries
         
-        return flask.jsonify(result=result)
-    except:
-        # The reason for the try and except is to ensure Flask responds with a JSON.
-        # If Flask catches your error, it means you didn't catch it yourself,
-        # And Flask, by default, returns the error in an HTML.
-        # We want /insert to respond with a JSON no matter what!
-        result={
-            "message": "Oh no! Server error!",
-            "status": 0, # This is defined by you. You just read this value in your javascript.
-            "mongo_id": str(status)
-            }
-        return flask.jsonify(result = result)
+        app.logger.debug("dist={}, start_time={}, checkpoints={}".format(brevet_dist, start_time, checkpoints))
+       # Insert the brevet into the database using the myapi.brevets_insert function
+        _id = myapi.brevets_insert(brevet_dist, start_time, checkpoints)
+        
+        result ={
+            "message": "Successfully inserted the brevet.",
+            "status": 1,
+            "_id": _id
+        }
+        
+        # Return the inserted brevet object as JSON
+        return flask.jsonify(result = result), 200
+    except (ValueError, KeyError):
+        return flask.jsonify(error="Invalid input data"), 400
+        
 
 
-@app.route("/fetch_brevet")
+@app.route("/fetch_brevet", methods=["GET"])
 def fetch_brevet():
     """
     /fetch : fetches the newest to-do list from the database.
@@ -121,25 +118,29 @@ def fetch_brevet():
     """
     try:
 
-        distance, start, items = mymongo.brevets_fetch()
+        # Fetch the newest brevet from the database using the myapi.brevets_fetch function
+        brevet_dist, start_time, checkpoints = myapi.brevets_fetch()
+        
+
         result ={
-            "info": {"distance": str(distance), "start": str(start), "items": items},
+            "brevet": {"brevet_dist": brevet_dist, "start_time": start_time, "items": checkpoints},
             "status": 1,
-            "message": "Successfully fetched the newest brevet"
-            }
+            "message": "Successfully fetched the brevets list."
+        }
 
         return flask.jsonify(result= result)
     except:
-        result ={"info": {"distance": None, "start": None, "items": []}, 
-        "status": 0, 
-        "message": "Something went wrong, couldn't fetch any lists!"}
-        return flask.jsonify(result= result)
+        result = {
+            "brevets": [],
+            "status": 0,
+            "message": "Brevets list not found."
+        }
+        return flask.jsonify(result=result)
 #############
 
-app.debug = CONFIG.DEBUG
+app.debug = os.environ["DEBUG"]
 if app.debug:
     app.logger.setLevel(logging.DEBUG)
 
 if __name__ == "__main__":
-    print("Opening for global access on port {}".format(CONFIG.PORT))
-    app.run(port=CONFIG.PORT, host="0.0.0.0")
+    app.run(port = os.environ["PORT"], host="0.0.0.0")
