@@ -175,7 +175,7 @@
                         // If not empty, append to our list.
                         if (control_point && open_time && close_time) {
                               if (open_time > close_time) {
-                                 alert("Invalid control point times for " + control_point + ": open time must be earlier than close time.");
+                                 
                                  return;
                               }
                               // Construct a dictionary
@@ -200,7 +200,7 @@
                               console.log("open_time=", open_time); 
                               console.log("close_time=", close_time);
                               console.log("items=", items);
-                              alert("Please enter values for all control point fields or leave them all blank.");
+                              
                               return;
                               
                         }
