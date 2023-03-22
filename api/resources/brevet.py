@@ -8,16 +8,16 @@ from flask import Response, request
 from flask_restful import Resource
 
 # You need to implement this in database/models.py
-from database.models import MyBrevet
+from database.models import Brevets
 from mongoengine.errors import DoesNotExist
 
 
 
-class Brevet(Resource):
+class BrevetResource(Resource):
 
     def get(self, _id):
         try:
-            brevet = MyBrevet.objects.get(id=_id).to_json()
+            brevet = Brevets.objects.get(id=_id).to_json()
             return Response(brevet, mimetype="application/json", status=200)
             
         except DoesNotExist:
@@ -27,7 +27,7 @@ class Brevet(Resource):
     def put(self, _id):
         try:
             data = request.json
-            brevet = MyBrevet.objects.get(id=_id)
+            brevet = Brevets.objects.get(id=_id)
             brevet.update(**data)
             brevet.reload()
             return '', 200
@@ -38,7 +38,7 @@ class Brevet(Resource):
 
     def delete(self, _id):
         try:
-            MyBrevet.objects.get(id=_id).delete()
+            Brevets.objects.get(id=_id).delete()
             return '', 200
             
         except DoesNotExist:

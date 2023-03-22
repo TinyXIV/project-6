@@ -1,7 +1,7 @@
 from mongoengine import Document, StringField, FloatField, DateTimeField, ListField, EmbeddedDocumentField, EmbeddedDocument
 from mongoengine.queryset.manager import QuerySetManager
 
-class Checkpoint(EmbeddedDocument):
+class Brevet(EmbeddedDocument):
     """
     A MongoEngine EmbeddedDocument containing:
         distance: MongoEngine float field, required, (checkpoint distance in kilometers),
@@ -15,7 +15,7 @@ class Checkpoint(EmbeddedDocument):
     close_time = DateTimeField(required=True) # checkpoint closing time
 
 
-class MyBrevet(Document):
+class Brevets(Document):
     """
     A MongoEngine document containing:
 		length: MongoEngine float field, required
@@ -24,4 +24,4 @@ class MyBrevet(Document):
     """
     brevet_dist = FloatField(required=True)        # brevet distance in kilometers
     start_time = DateTimeField(required=True) # brevet start time
-    checkpoints = EmbeddedDocumentField(Checkpoint, required=True) # checkpoints
+    checkpoints = EmbeddedDocumentField(Brevet, required=True) # checkpoints
